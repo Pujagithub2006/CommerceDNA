@@ -1,7 +1,7 @@
 package io.commercedna.core.exception;
 
 /**
- * Thrown when an agent attempts to purchase more than the merchant's maximum single-buyer allocation.
+ * Thrown when an agent attempts to purchase outside the merchant's allowable quota limits.
  */
 public class QuantityQuotaExceededException extends DomainException {
 
@@ -11,5 +11,9 @@ public class QuantityQuotaExceededException extends DomainException {
                 requestedQuantity, maxAllowedQuantity, sku),
             "CDNA_POLICY_QUANTITY_EXCEEDED"
         );
+    }
+
+    public QuantityQuotaExceededException(String message) {
+        super(message, "CDNA_POLICY_QUANTITY_EXCEEDED");
     }
 }

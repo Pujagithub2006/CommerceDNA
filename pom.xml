@@ -31,6 +31,7 @@
     <modules>
         <module>commercedna-core</module>
         <module>commercedna-identity</module>
+        <module>commercedna-catalog</module>
         <module>commercedna-api</module>
     </modules>
 
@@ -45,6 +46,11 @@
             <dependency>
                 <groupId>io.commercedna</groupId>
                 <artifactId>commercedna-identity</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.commercedna</groupId>
+                <artifactId>commercedna-catalog</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

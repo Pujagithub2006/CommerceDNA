@@ -26,6 +26,10 @@
             <groupId>io.commercedna</groupId>
             <artifactId>commercedna-identity</artifactId>
         </dependency>
+        <dependency>
+            <groupId>io.commercedna</groupId>
+            <artifactId>commercedna-catalog</artifactId>
+        </dependency>
 
         <!-- Spring Boot Starters -->
         <dependency>
