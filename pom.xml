@@ -34,6 +34,7 @@
         <module>commercedna-catalog</module>
         <module>commercedna-negotiation</module>
         <module>commercedna-settlement</module>
+        <module>commercedna-audit</module>
         <module>commercedna-api</module>
     </modules>
 
@@ -65,6 +66,12 @@
                 <artifactId>commercedna-settlement</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>io.commercedna</groupId>
+                <artifactId>commercedna-audit</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
 
 
             <!-- Springdoc OpenAPI 3.1 -->

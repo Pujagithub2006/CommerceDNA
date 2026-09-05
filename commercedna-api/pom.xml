@@ -38,6 +38,11 @@
             <groupId>io.commercedna</groupId>
             <artifactId>commercedna-settlement</artifactId>
         </dependency>
+        <dependency>
+            <groupId>io.commercedna</groupId>
+            <artifactId>commercedna-audit</artifactId>
+        </dependency>
+
 
 
         <!-- Spring Boot Starters -->
