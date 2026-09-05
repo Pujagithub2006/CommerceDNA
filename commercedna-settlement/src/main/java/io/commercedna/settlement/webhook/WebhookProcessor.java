@@ -61,9 +61,26 @@ public class WebhookProcessor {
             String message
     ) {}
 
+    /**
+     * Process a Razorpay webhook using the vault-encrypted webhook secret.
+     * This is the canonical entry-point; the secret is never caller-supplied.
+     */
+    public WebhookProcessResult processWebhook(String rawPayload, String signatureHeader) {
+        return processWebhook(rawPayload, signatureHeader, null);
+    }
+
+    /**
+     * Internal overload retained for test compatibility.
+     * {@code customSecret} MUST be {@code null} in all production call-sites;
+     * the vault secret is always used when customSecret is null or blank.
+     *
+     * @deprecated Use {@link #processWebhook(String, String)} instead.
+     */
+    @Deprecated
     public WebhookProcessResult processWebhook(String rawPayload, String signatureHeader, String customSecret) {
         Objects.requireNonNull(rawPayload, "rawPayload must not be null");
 
+        // Production code never provides a customSecret; only test stubs may do so.
         String secret = (customSecret != null && !customSecret.isBlank())
                 ? customSecret
                 : razorpayProperties.getWebhookSecret();
