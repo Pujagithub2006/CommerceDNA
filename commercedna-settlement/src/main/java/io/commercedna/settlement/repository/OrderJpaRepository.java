@@ -3,7 +3,6 @@ package io.commercedna.settlement.repository;
 import io.commercedna.core.entity.OrderStatus;
 import io.commercedna.settlement.entity.OrderEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -26,11 +25,4 @@ public interface OrderJpaRepository extends JpaRepository<OrderEntity, UUID> {
     List<OrderEntity> findByBuyerAgentDid(String buyerAgentDid);
 
     List<OrderEntity> findByStatus(OrderStatus status);
-
-    /**
-     * Aggregate GMV in a single SQL query instead of hydrating all rows.
-     * Returns 0L when there are no orders.
-     */
-    @Query("SELECT COALESCE(SUM(o.totalAmountPaise), 0) FROM OrderEntity o")
-    long sumTotalAmountPaise();
 }

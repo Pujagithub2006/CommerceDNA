@@ -46,4 +46,11 @@ public class SettlementController {
         PaymentLinkResponse response = orderService.createPaymentLink(request);
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/refunds")
+    @Operation(summary = "Issue a Razorpay test mode refund for a settled order and restore inventory")
+    public ResponseEntity<io.commercedna.settlement.dto.RefundResponse> refundOrder(@Valid @RequestBody io.commercedna.settlement.dto.RefundRequest request) {
+        io.commercedna.settlement.dto.RefundResponse response = orderService.refundOrder(request);
+        return ResponseEntity.ok(response);
+    }
 }

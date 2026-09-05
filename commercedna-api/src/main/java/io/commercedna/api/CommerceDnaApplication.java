@@ -4,6 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * CommerceDNA Main Application Entrypoint.
@@ -12,6 +13,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @SpringBootApplication(scanBasePackages = "io.commercedna")
 @EnableJpaRepositories(basePackages = "io.commercedna")
 @EntityScan(basePackages = "io.commercedna")
+@EnableScheduling
 public class CommerceDnaApplication {
 
     public static void main(String[] args) {

@@ -77,4 +77,31 @@ public class RazorpayClient {
                 "created"
         );
     }
+
+    public record RazorpayRefundResult(
+            String id,
+            String paymentId,
+            long amountPaise,
+            String currency,
+            String status,
+            String reason
+    ) {}
+
+    public RazorpayRefundResult createRefund(String paymentId, long amountPaise, String reason) {
+        if (amountPaise <= 0) {
+            throw new IllegalArgumentException("Razorpay Refund amount must be positive integer paise.");
+        }
+
+        String refundId = "rfnd_" + UUID.randomUUID().toString().replace("-", "").substring(0, 14);
+        log.info("Processed Razorpay Test Mode Refund: ID={}, PaymentID={}, Amount={} paise", refundId, paymentId, amountPaise);
+
+        return new RazorpayRefundResult(
+                refundId,
+                paymentId,
+                amountPaise,
+                "INR",
+                "processed",
+                reason != null ? reason : "Customer initiated refund"
+        );
+    }
 }

@@ -184,5 +184,25 @@ class SettlementControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("PAID"))
                 .andExpect(jsonPath("$.razorpayPaymentId").value("pay_test_webhook_001"));
+
+        // Test Refund API
+        io.commercedna.settlement.dto.RefundRequest refundReq = new io.commercedna.settlement.dto.RefundRequest(
+                orderCode,
+                "Customer requested return within policy window"
+        );
+
+        mockMvc.perform(post("/api/v1/settlement/refunds")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(refundReq)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.orderCode").value(orderCode))
+                .andExpect(jsonPath("$.status").value("REFUNDED"))
+                .andExpect(jsonPath("$.refundId").isNotEmpty())
+                .andExpect(jsonPath("$.refundedAmountPaise").value(1800000L));
+
+        // Verify order status is REFUNDED
+        mockMvc.perform(get("/api/v1/settlement/orders/" + orderCode))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("REFUNDED"));
     }
 }
