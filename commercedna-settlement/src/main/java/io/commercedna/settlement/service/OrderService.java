@@ -226,62 +226,6 @@ public class OrderService {
                 .orElseThrow(() -> new ResourceNotFoundException("Order", orderId.toString()));
     }
 
-    public io.commercedna.settlement.dto.RefundResponse refundOrder(io.commercedna.settlement.dto.RefundRequest req) {
-        Objects.requireNonNull(req, "RefundRequest must not be null");
-        OrderEntity order = orderRepository.findByOrderCode(req.orderCode().trim())
-                .orElseThrow(() -> new ResourceNotFoundException("Order", req.orderCode()));
-
-        if (order.getStatus() != OrderStatus.PAID) {
-            throw new io.commercedna.core.exception.DomainException("Only orders with status PAID can be refunded. Current status: " + order.getStatus());
-        }
-
-        String paymentId = order.getRazorpayPaymentId() != null ? order.getRazorpayPaymentId() : "pay_" + UUID.randomUUID().toString().substring(0, 10);
-        RazorpayClient.RazorpayRefundResult refundResult = razorpayClient.createRefund(paymentId, order.getTotalAmountPaise(), req.reason());
-
-        order.setStatus(OrderStatus.REFUNDED);
-        order.setUpdatedAt(Instant.now());
-        orderRepository.save(order);
-
-        // Restore inventory back to product stock
-        productRepository.findByMerchantIdAndSku(order.getMerchantId(), order.getSku()).ifPresent(product -> {
-            product.setStockQuantity(product.getStockQuantity() + order.getQuantity());
-            productRepository.save(product);
-        });
-
-        // Enqueue Outbox event
-        try {
-            OutboxEventEntity outboxEvent = new OutboxEventEntity(
-                    UUID.randomUUID(),
-                    "ORDER_REFUNDED",
-                    "ORDER",
-                    order.getId().toString(),
-                    objectMapper.writeValueAsString(Map.of(
-                            "orderCode", order.getOrderCode(),
-                            "refundId", refundResult.id(),
-                            "amountPaise", order.getTotalAmountPaise(),
-                            "status", "REFUNDED"
-                    )),
-                    "PENDING",
-                    0,
-                    Instant.now(),
-                    null
-            );
-            outboxRepository.save(outboxEvent);
-        } catch (JsonProcessingException ex) {
-            log.error("Failed to serialize outbox event payload for refund", ex);
-        }
-
-        return new io.commercedna.settlement.dto.RefundResponse(
-                order.getOrderCode(),
-                refundResult.id(),
-                paymentId,
-                order.getTotalAmountPaise(),
-                order.getCurrency(),
-                OrderStatus.REFUNDED,
-                "Order successfully refunded and inventory restored."
-        );
-    }
-
     @Transactional(readOnly = true)
     public List<OrderEntity> getOrdersByMerchant(UUID merchantId) {
         return orderRepository.findByMerchantId(merchantId);
