@@ -24,14 +24,21 @@ public class TraceContextFilter extends OncePerRequestFilter {
     public static final String TRACE_ID_HEADER = "X-Trace-Id";
     public static final String MDC_TRACE_KEY = "traceId";
 
+    // Only accept standard UUID-format trace IDs from callers
+    private static final java.util.regex.Pattern SAFE_TRACE_PATTERN =
+            java.util.regex.Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
+
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
-        String traceId = request.getHeader(TRACE_ID_HEADER);
-        if (traceId == null || traceId.isBlank()) {
+        String inbound = request.getHeader(TRACE_ID_HEADER);
+        String traceId;
+        if (inbound != null && SAFE_TRACE_PATTERN.matcher(inbound.trim()).matches()) {
+            traceId = inbound.trim();
+        } else {
             traceId = UUID.randomUUID().toString();
         }
 
