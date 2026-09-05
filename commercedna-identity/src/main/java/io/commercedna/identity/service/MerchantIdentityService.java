@@ -68,10 +68,11 @@ public class MerchantIdentityService implements MerchantRepositoryPort {
         // 1. Generate Sovereign Ed25519 Keypair
         CryptoPort.KeyPairResult keyPair = cryptoPort.generateEd25519KeyPair();
 
-        // 2. Encrypt Razorpay Secrets using AES-256-GCM Vault
+        // 2. Encrypt Razorpay Secrets and Ed25519 Private Key using AES-256-GCM Vault
         String encKeyId = secretVault.encrypt(cmd.rawRazorpayKeyId().trim());
         String encKeySecret = secretVault.encrypt(cmd.rawRazorpayKeySecret().trim());
         String encWebhookSecret = secretVault.encrypt(cmd.rawWebhookSecret().trim());
+        String encPrivateKey = secretVault.encrypt(keyPair.privateKeyBase64().trim());
 
         // 3. Persist Entity
         UUID merchantId = UUID.randomUUID();
@@ -90,6 +91,7 @@ public class MerchantIdentityService implements MerchantRepositoryPort {
                 now,
                 now
         );
+        entity.setEncryptedPrivateKeyEd25519(encPrivateKey);
 
         merchantRepository.save(entity);
 
@@ -100,6 +102,13 @@ public class MerchantIdentityService implements MerchantRepositoryPort {
                 keyPair.publicKeyBase64(),
                 domainMerchant.getDid().getValue()
         );
+    }
+
+    @Transactional(readOnly = true)
+    public String getDecryptedMerchantPrivateKey(UUID merchantId) {
+        MerchantEntity entity = merchantRepository.findById(merchantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Merchant", merchantId.toString()));
+        return secretVault.decrypt(entity.getEncryptedPrivateKeyEd25519());
     }
 
     @Transactional(readOnly = true)

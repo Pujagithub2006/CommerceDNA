@@ -28,6 +28,9 @@ public class MerchantEntity {
     @Column(name = "public_key_ed25519", nullable = false, length = 128)
     private String publicKeyEd25519;
 
+    @Column(name = "encrypted_private_key_ed25519", columnDefinition = "TEXT")
+    private String encryptedPrivateKeyEd25519;
+
     @Column(name = "encrypted_razorpay_key_id", nullable = false, columnDefinition = "TEXT")
     private String encryptedRazorpayKeyId;
 
@@ -113,6 +116,14 @@ public class MerchantEntity {
 
     public void setPublicKeyEd25519(String publicKeyEd25519) {
         this.publicKeyEd25519 = publicKeyEd25519;
+    }
+
+    public String getEncryptedPrivateKeyEd25519() {
+        return encryptedPrivateKeyEd25519;
+    }
+
+    public void setEncryptedPrivateKeyEd25519(String encryptedPrivateKeyEd25519) {
+        this.encryptedPrivateKeyEd25519 = encryptedPrivateKeyEd25519;
     }
 
     public String getEncryptedRazorpayKeyId() {

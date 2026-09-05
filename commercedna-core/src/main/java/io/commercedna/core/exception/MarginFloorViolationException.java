@@ -33,4 +33,9 @@ public class MarginFloorViolationException extends DomainException {
     public long getFloorPricePaise() {
         return floorPricePaise;
     }
+
+    public long getAllowableFloorPaise() {
+        return floorPricePaise;
+    }
 }
+

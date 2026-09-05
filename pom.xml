@@ -32,6 +32,7 @@
         <module>commercedna-core</module>
         <module>commercedna-identity</module>
         <module>commercedna-catalog</module>
+        <module>commercedna-negotiation</module>
         <module>commercedna-api</module>
     </modules>
 
@@ -51,6 +52,11 @@
             <dependency>
                 <groupId>io.commercedna</groupId>
                 <artifactId>commercedna-catalog</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.commercedna</groupId>
+                <artifactId>commercedna-negotiation</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -86,7 +92,11 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>3.5.2</version>
+                    <configuration>
+                        <argLine>-Dnet.bytebuddy.experimental=true</argLine>
+                    </configuration>
                 </plugin>
+
             </plugins>
         </pluginManagement>
     </build>
