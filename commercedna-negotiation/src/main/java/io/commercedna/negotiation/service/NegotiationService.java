@@ -14,6 +14,7 @@ import io.commercedna.core.port.CryptoPort;
 import io.commercedna.identity.service.MerchantIdentityService;
 import io.commercedna.negotiation.dto.NegotiateChatRequest;
 import io.commercedna.negotiation.dto.NegotiateChatResponse;
+import io.commercedna.negotiation.ai.LLMIntentExtractor;
 import io.commercedna.negotiation.engine.DualModelIntentCompiler;
 import io.commercedna.negotiation.repository.ProposalEntity;
 import io.commercedna.negotiation.repository.ProposalJpaRepository;
@@ -40,6 +41,7 @@ public class NegotiationService {
     private final CatalogService catalogService;
     private final MarginGuardrailEngine marginGuardrailEngine;
     private final DualModelIntentCompiler intentCompiler;
+    private final LLMIntentExtractor llmIntentExtractor;
     private final CryptoPort cryptoPort;
 
     public NegotiationService(
@@ -48,6 +50,7 @@ public class NegotiationService {
             CatalogService catalogService,
             MarginGuardrailEngine marginGuardrailEngine,
             DualModelIntentCompiler intentCompiler,
+            LLMIntentExtractor llmIntentExtractor,
             CryptoPort cryptoPort
     ) {
         this.proposalRepository = Objects.requireNonNull(proposalRepository);
@@ -55,6 +58,7 @@ public class NegotiationService {
         this.catalogService = Objects.requireNonNull(catalogService);
         this.marginGuardrailEngine = Objects.requireNonNull(marginGuardrailEngine);
         this.intentCompiler = Objects.requireNonNull(intentCompiler);
+        this.llmIntentExtractor = Objects.requireNonNull(llmIntentExtractor);
         this.cryptoPort = Objects.requireNonNull(cryptoPort);
     }
 
@@ -224,12 +228,53 @@ public class NegotiationService {
 
         ProductEntity product = catalogService.getProductByMerchantAndSku(merchant.getId(), request.sku().trim().toUpperCase());
 
-        // 1. Dual-Model Intent Extraction & Airgap Prompt Injection Check
-        DualModelIntentCompiler.ExtractedIntent extracted = intentCompiler.compileIntent(
+        // 1. Enhanced Intent Extraction with LLM + Deterministic Fallback
+        // Primary: Use LLM for intelligent understanding
+        // Fallback: Use deterministic pattern matching
+        LLMIntentExtractor.ExtractedIntent llmExtracted = llmIntentExtractor.extractIntent(
                 product.getSku(),
                 product.getBasePricePaise(),
                 request.buyerMessage()
         );
+
+        // If LLM indicates adversarial injection, block immediately
+        if (llmExtracted.adversarialInjection()) {
+            return new NegotiateChatResponse(
+                    "sess_" + UUID.randomUUID().toString().substring(0, 8),
+                    merchant.getMerchantCode(),
+                    product.getSku(),
+                    "SECURITY_ALERT: The proposal was blocked by the CommerceDNA Deterministic Policy Airgap. Adversarial manipulation or margin override attempt detected.",
+                    ProposalStatus.REJECTED,
+                    null,
+                    null,
+                    null,
+                    null,
+                    llmExtracted.rejectionReason(),
+                    null,
+                    true
+            );
+        }
+
+        // Use LLM extraction with high confidence, otherwise fallback to deterministic
+        DualModelIntentCompiler.ExtractedIntent extracted;
+        if (llmExtracted.confidence() >= 0.7) {
+            // Convert LLM result to dual-model format
+            extracted = new DualModelIntentCompiler.ExtractedIntent(
+                    llmExtracted.sku(),
+                    llmExtracted.quantity(),
+                    llmExtracted.proposedUnitPricePaise(),
+                    llmExtracted.intentDetected(),
+                    llmExtracted.adversarialInjection(),
+                    llmExtracted.rejectionReason()
+            );
+        } else {
+            // Fallback to deterministic patterns
+            extracted = intentCompiler.compileIntent(
+                    product.getSku(),
+                    product.getBasePricePaise(),
+                    request.buyerMessage()
+            );
+        }
 
         if (extracted.adversarialInjection()) {
             return new NegotiateChatResponse(
