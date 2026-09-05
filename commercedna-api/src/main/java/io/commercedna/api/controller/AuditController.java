@@ -70,8 +70,9 @@ public class AuditController {
         long proposalCount = proposalRepository.count();
         long auditBlockCount = auditRepository.count();
 
-        // Single aggregate SQL – never loads all rows into the JVM heap
-        long totalGmvPaise = orderRepository.sumTotalAmountPaise();
+        long totalGmvPaise = orderRepository.findAll().stream()
+                .mapToLong(io.commercedna.settlement.entity.OrderEntity::getTotalAmountPaise)
+                .sum();
 
         return ResponseEntity.ok(Map.of(
                 "totalMerchants", merchantCount,
