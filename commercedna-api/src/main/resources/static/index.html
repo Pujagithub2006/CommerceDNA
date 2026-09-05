@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="CommerceDNA - AI-Native Merchant Identity & Negotiation Protocol for Autonomous Agentic Commerce">
+    <meta name="keywords" content="AI commerce, merchant protocol, Razorpay, agentic transactions, negotiation">
     <title>CommerceDNA - AI-Native Merchant Identity & Negotiation Protocol</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -196,6 +198,9 @@
                                 <button class="persona-btn active" onclick="selectPersona('procurement')">🏢 Procurement Bot</button>
                                 <button class="persona-btn" onclick="selectPersona('bargain')">🛍️ Bargain Hunter</button>
                                 <button class="persona-btn" onclick="selectPersona('scalper')">⚡ Aggressive Scalper</button>
+                                <button class="persona-btn" onclick="selectPersona('sophisticated')">🎯 Sophisticated Buyer</button>
+                                <button class="persona-btn" onclick="selectPersona('urgent')">🚨 Urgent Request</button>
+                                <button class="persona-btn" onclick="selectPersona('international')">🌍 International Buyer</button>
                                 <button class="persona-btn persona-adversarial" onclick="selectPersona('jailbreak')">⚠️ Jailbreak Attacker</button>
                             </div>
                         </div>
@@ -259,11 +264,10 @@
                                     <th>Status</th>
                                     <th>Razorpay Order ID</th>
                                     <th>Payment Link</th>
-                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody id="ordersTableBody">
-                                <tr><td colspan="9" class="text-center">No orders recorded yet. Complete a negotiation in the Simulator to create an order.</td></tr>
+                                <tr><td colspan="8" class="text-center">No orders recorded yet. Complete a negotiation in the Simulator to create an order.</td></tr>
                             </tbody>
                         </table>
                     </div>
