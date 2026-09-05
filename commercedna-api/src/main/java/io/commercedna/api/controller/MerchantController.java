@@ -3,6 +3,7 @@ package io.commercedna.api.controller;
 import io.commercedna.api.dto.MerchantProfileResponse;
 import io.commercedna.api.dto.RegisterMerchantRequest;
 import io.commercedna.api.dto.RegisterMerchantResponse;
+import io.commercedna.api.security.JwtTokenService;
 import io.commercedna.core.entity.Merchant;
 import io.commercedna.core.exception.ResourceNotFoundException;
 import io.commercedna.identity.service.MerchantIdentityService;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -31,9 +33,11 @@ import java.util.UUID;
 public class MerchantController {
 
     private final MerchantIdentityService merchantIdentityService;
+    private final JwtTokenService jwtTokenService;
 
-    public MerchantController(MerchantIdentityService merchantIdentityService) {
+    public MerchantController(MerchantIdentityService merchantIdentityService, JwtTokenService jwtTokenService) {
         this.merchantIdentityService = Objects.requireNonNull(merchantIdentityService);
+        this.jwtTokenService = Objects.requireNonNull(jwtTokenService);
     }
 
     @PostMapping("/api/v1/merchants")
@@ -51,6 +55,13 @@ public class MerchantController {
         MerchantIdentityService.RegistrationResult result = merchantIdentityService.registerMerchant(cmd);
         Merchant merchant = result.merchant();
 
+        // Generate JWT token for immediate authentication
+        String jwtToken = jwtTokenService.generateToken(
+                merchant.getId().toString(),
+                merchant.getMerchantCode(),
+                List.of("ROLE_MERCHANT", "ROLE_API_ACCESS")
+        );
+
         RegisterMerchantResponse response = new RegisterMerchantResponse(
                 merchant.getId(),
                 merchant.getMerchantCode(),
@@ -59,6 +70,7 @@ public class MerchantController {
                 result.merchantDid(),
                 result.publicKeyEd25519Base64(),
                 result.privateKeyEd25519Base64(),
+                jwtToken,
                 merchant.getCreatedAt()
         );
 
@@ -101,8 +113,7 @@ public class MerchantController {
             merchant = merchantIdentityService.findByMerchantCode(merchantCode)
                     .orElseThrow(() -> new ResourceNotFoundException("Merchant with code", merchantCode));
         } else {
-            merchant = merchantIdentityService.findByMerchantCode("apex-tech")
-                    .or(() -> merchantIdentityService.findByMerchantCode("default"))
+            merchant = merchantIdentityService.findByMerchantCode("default")
                     .or(() -> merchantIdentityService.findByMerchantCode("demo_store"))
                     .orElseThrow(() -> new ResourceNotFoundException("Default Merchant", "No merchant found. Register a merchant first or provide ?merchantCode=..."));
         }

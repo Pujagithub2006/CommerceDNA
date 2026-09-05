@@ -11,5 +11,6 @@ public record RegisterMerchantResponse(
         String merchantDid,
         String publicKeyEd25519,
         String privateKeyEd25519,
+        String jwtToken,
         Instant createdAt
 ) {}
