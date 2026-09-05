@@ -53,6 +53,7 @@ class MerchantControllerTest {
                 .andExpect(jsonPath("$.merchantDid").value("did:cdna:merchant:titan_watches"))
                 .andExpect(jsonPath("$.publicKeyEd25519").isNotEmpty())
                 .andExpect(jsonPath("$.privateKeyEd25519").isNotEmpty())
+                .andExpect(jsonPath("$.jwtToken").isNotEmpty())
                 .andReturn();
 
         Map<?, ?> responseMap = objectMapper.readValue(result.getResponse().getContentAsString(), Map.class);
