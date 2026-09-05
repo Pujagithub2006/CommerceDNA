@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CommerceDNA - AI-Native Merchant Identity & Negotiation Protocol</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-icon">🧬</div>
+                <div class="brand-text">
+                    <span class="brand-title">Commerce<span class="brand-highlight">DNA</span></span>
+                    <span class="brand-subtitle">Agentic Commerce Protocol</span>
+                </div>
+            </div>
+
+            <nav class="nav-menu">
+                <button class="nav-item active" data-tab="overview">
+                    <span class="nav-icon">📊</span>
+                    <span>Overview & Analytics</span>
+                </button>
+                <button class="nav-item" data-tab="policies">
+                    <span class="nav-icon">🛡️</span>
+                    <span>Policy & Margin Airgap</span>
+                </button>
+                <button class="nav-item" data-tab="simulator">
+                    <span class="nav-icon">🤖</span>
+                    <span>AI Agent Simulator</span>
+                </button>
+                <button class="nav-item" data-tab="orders">
+                    <span class="nav-icon">💳</span>
+                    <span>Settlement & Orders</span>
+                </button>
+                <button class="nav-item" data-tab="audit">
+                    <span class="nav-icon">🔗</span>
+                    <span>Cryptographic Ledger</span>
+                </button>
+            </nav>
+
+            <div class="merchant-badge">
+                <div class="badge-header">
+                    <span class="status-dot"></span>
+                    <span class="merchant-name" id="currentMerchantName">Apex Electronics</span>
+                </div>
+                <div class="merchant-did" id="currentMerchantDid">did:cdna:apex-electronics</div>
+                <div class="rail-tag">Razorpay Test Mode Active</div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Top Header Bar -->
+            <header class="top-header">
+                <div class="header-left">
+                    <h1 id="pageTitle">Merchant Control Plane & Protocol Gateway</h1>
+                    <p class="header-description">Autonomous agentic transactions governed by unbreakable deterministic margin guardrails.</p>
+                </div>
+                <div class="header-right">
+                    <div class="airgap-status-badge">
+                        <span class="shield-icon">🛡️</span>
+                        <span>POLICY AIRGAP: <strong class="text-emerald">ENFORCED</strong></span>
+                    </div>
+                    <a href="/swagger-ui/index.html" target="_blank" class="btn btn-outline btn-sm">OpenAPI 3.1 Docs</a>
+                </div>
+            </header>
+
+            <!-- Tab 1: Overview & Analytics -->
+            <section id="tab-overview" class="tab-pane active">
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <span class="metric-title">Total GMV Settled</span>
+                            <span class="metric-icon">💰</span>
+                        </div>
+                        <div class="metric-value" id="statGmv">₹44,000.00</div>
+                        <div class="metric-sub text-emerald">↑ 100% via Razorpay Rails</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <span class="metric-title">Active Protected SKUs</span>
+                            <span class="metric-icon">📦</span>
+                        </div>
+                        <div class="metric-value" id="statProducts">3 SKUs</div>
+                        <div class="metric-sub text-cyan">Margin Floor Enforced</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <span class="metric-title">Agentic Proposals</span>
+                            <span class="metric-icon">🤖</span>
+                        </div>
+                        <div class="metric-value" id="statProposals">12 Evaluated</div>
+                        <div class="metric-sub text-violet">Dual-Model Sandboxed</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <span class="metric-title">Merkle Audit Blocks</span>
+                            <span class="metric-icon">🔗</span>
+                        </div>
+                        <div class="metric-value" id="statAuditBlocks">8 Blocks</div>
+                        <div class="metric-sub text-emerald">100% Intact & Chained</div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="card card-wide">
+                        <div class="card-header">
+                            <h3>Live Agentic Transaction Velocity</h3>
+                            <span class="badge badge-info">Paise-Precision Financials</span>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="gmvChart" height="90"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Merchant DNA Identity Manifest</h3>
+                            <span class="badge badge-success">Ed25519 Sovereign</span>
+                        </div>
+                        <div class="card-body">
+                            <pre class="code-block" id="manifestPreview">Loading signed manifest...</pre>
+                            <button class="btn btn-secondary btn-sm mt-3" onclick="refreshManifest()">Probe /.well-known/commercedna.json</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab 2: Policy & Margin Airgap -->
+            <section id="tab-policies" class="tab-pane">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h3>Deterministic Profit Margin Guardrail Rules</h3>
+                        <span class="badge badge-danger">Unbreakable Airgap</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="policy-controls">
+                            <div class="control-group">
+                                <label for="marginFloorSlider">Global Minimum Margin Floor: <strong id="marginFloorVal" class="text-cyan">15%</strong></label>
+                                <input type="range" id="marginFloorSlider" min="5" max="50" value="15" class="slider" oninput="updateMarginLabel(this.value)">
+                                <p class="control-hint">Any AI buyer bid below this mathematical floor will be deterministically countered or rejected with RFC 7807 403 Forbidden.</p>
+                            </div>
+                            <div class="control-group">
+                                <label for="maxQuotaInput">Single-Buyer Max Quantity Quota: <strong id="quotaVal" class="text-cyan">50 Units</strong></label>
+                                <input type="range" id="maxQuotaInput" min="1" max="200" value="50" class="slider" oninput="document.getElementById('quotaVal').innerText = this.value + ' Units'">
+                                <p class="control-hint">Prevents automated market scalping and inventory exhaustion attacks.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Catalog SKUs & Active Margin Envelopes</h3>
+                    </div>
+                    <div class="card-body">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>SKU</th>
+                                    <th>Product Title</th>
+                                    <th>Base Price</th>
+                                    <th>Cost Price</th>
+                                    <th>Min Margin Floor</th>
+                                    <th>Max Discount</th>
+                                    <th>Stock</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="catalogTableBody">
+                                <tr><td colspan="8" class="text-center">Loading catalog...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab 3: AI Agent Negotiation Simulator -->
+            <section id="tab-simulator" class="tab-pane">
+                <div class="simulator-layout">
+                    <!-- Chat Dialogue Column -->
+                    <div class="card chat-card">
+                        <div class="card-header">
+                            <div>
+                                <h3>AI Buyer Agent Sandbox</h3>
+                                <span class="text-muted text-sm">Select a buyer persona to simulate automated negotiation</span>
+                            </div>
+                            <div class="persona-selector">
+                                <button class="persona-btn active" onclick="selectPersona('procurement')">🏢 Procurement Bot</button>
+                                <button class="persona-btn" onclick="selectPersona('bargain')">🛍️ Bargain Hunter</button>
+                                <button class="persona-btn" onclick="selectPersona('scalper')">⚡ Aggressive Scalper</button>
+                                <button class="persona-btn persona-adversarial" onclick="selectPersona('jailbreak')">⚠️ Jailbreak Attacker</button>
+                            </div>
+                        </div>
+
+                        <div class="chat-history" id="chatHistory">
+                            <!-- Messages injected via app.js -->
+                        </div>
+
+                        <div class="chat-input-bar">
+                            <input type="text" id="chatInput" placeholder="Type a bid or question to negotiate..." onkeydown="if(event.key==='Enter') sendChatMessage()">
+                            <button class="btn btn-primary" onclick="sendChatMessage()">Send Bid 🚀</button>
+                        </div>
+                    </div>
+
+                    <!-- Airgap Inspection Panel -->
+                    <div class="card airgap-panel">
+                        <div class="card-header">
+                            <h3>Policy Airgap Inspector</h3>
+                            <span class="badge badge-info" id="inspectorBadge">STANDBY</span>
+                        </div>
+                        <div class="card-body inspector-body">
+                            <div class="inspection-step">
+                                <div class="step-title">1. Dual-Model Intent Extraction</div>
+                                <div class="step-content" id="inspIntent">Awaiting negotiation bid...</div>
+                            </div>
+                            <div class="inspection-step">
+                                <div class="step-title">2. Deterministic Margin Verification</div>
+                                <div class="step-content" id="inspMargin">Awaiting bid evaluation...</div>
+                            </div>
+                            <div class="inspection-step">
+                                <div class="step-title">3. Ed25519 Cryptographic Counter-Signature</div>
+                                <div class="step-content" id="inspSignature">Awaiting agreement lock...</div>
+                            </div>
+                            <div class="inspection-step">
+                                <div class="step-title">4. Razorpay Test Mode Checkout Link</div>
+                                <div class="step-content" id="inspCheckout">
+                                    <div class="checkout-placeholder">No active locked proposal yet.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab 4: Settlement & Orders -->
+            <section id="tab-orders" class="tab-pane">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Committed Orders & Razorpay Settlement State Machine</h3>
+                        <button class="btn btn-secondary btn-sm" onclick="loadOrders()">Refresh Orders 🔄</button>
+                    </div>
+                    <div class="card-body">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Order Code</th>
+                                    <th>Buyer Agent DID</th>
+                                    <th>SKU</th>
+                                    <th>Qty</th>
+                                    <th>Total Amount</th>
+                                    <th>Status</th>
+                                    <th>Razorpay Order ID</th>
+                                    <th>Payment Link</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ordersTableBody">
+                                <tr><td colspan="8" class="text-center">No orders recorded yet. Complete a negotiation in the Simulator to create an order.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab 5: Cryptographic Merkle Ledger Explorer -->
+            <section id="tab-audit" class="tab-pane">
+                <div class="audit-header-bar mb-4">
+                    <div>
+                        <h2>Cryptographic SHA-256 Merkle Audit Ledger</h2>
+                        <p class="text-muted">Every deal, proposal, and state transition is hashed and chained into an immutable append-only ledger.</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="verifyChainIntegrity()">
+                        🛡️ Verify Full Chain Integrity
+                    </button>
+                </div>
+
+                <div id="verificationBanner" class="verification-banner hidden">
+                    <div class="banner-icon" id="bannerIcon">✅</div>
+                    <div class="banner-text">
+                        <strong id="bannerTitle">Chain Verification Passed</strong>
+                        <p id="bannerDetail">Traversed from genesis to leaf. Zero tamper detected across 8 blocks.</p>
+                    </div>
+                </div>
+
+                <div class="ledger-chain" id="ledgerChainContainer">
+                    <!-- Blocks injected dynamically via app.js -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Razorpay Checkout Modal Simulator -->
+    <div id="paymentModal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span class="rzp-icon">💳</span>
+                    <span>Razorpay Test Mode Checkout</span>
+                </div>
+                <button class="modal-close" onclick="closePaymentModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="payment-summary">
+                    <div class="summary-row">
+                        <span>Merchant:</span>
+                        <strong>Apex Electronics Technologies</strong>
+                    </div>
+                    <div class="summary-row">
+                        <span>Order Code:</span>
+                        <code id="modalOrderCode">ord_...</code>
+                    </div>
+                    <div class="summary-row">
+                        <span>Total Amount:</span>
+                        <strong class="text-cyan text-lg" id="modalAmount">₹44,000.00</strong>
+                    </div>
+                </div>
+
+                <div class="test-payment-options mt-4">
+                    <p class="text-sm text-muted mb-2">Simulate real-time buyer agent payment completion:</p>
+                    <button class="btn btn-success btn-block mb-2" onclick="simulatePaymentSuccess()">
+                        ⚡ Simulate Instant UPI Payment Success (Webhooks Dispatched)
+                    </button>
+                    <button class="btn btn-outline btn-block" onclick="closePaymentModal()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
