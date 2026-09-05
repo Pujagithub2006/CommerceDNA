@@ -27,18 +27,28 @@ COPY commercedna-settlement/src ./commercedna-settlement/src
 COPY commercedna-audit/src ./commercedna-audit/src
 COPY commercedna-api/src ./commercedna-api/src
 
-# Package API executable jar without running surefire tests in build stage
-RUN mvn clean package -DskipTests -B
+# Run tests and package
+RUN mvn clean test package -B
 
 # =============================================================================
 # Stage 2: Hardened, Unprivileged Runtime Container
 # =============================================================================
 FROM eclipse-temurin:21-jre-alpine AS runner
 
+# Install security updates and required packages
+RUN apk update && \
+    apk upgrade && \
+    apk add --no-cache wget curl ca-certificates tzdata && \
+    rm -rf /var/cache/apk/*
+
+# Set timezone
+ENV TZ=Asia/Kolkata
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 # Create non-root system group and user (UID/GID 10001)
 RUN addgroup -g 10001 appgroup && \
     adduser -u 10001 -G appgroup -s /bin/sh -D appuser && \
-    mkdir -p /app && \
+    mkdir -p /app /app/logs && \
     chown -R appuser:appgroup /app
 
 WORKDIR /app
@@ -53,7 +63,7 @@ USER appuser
 EXPOSE 8080
 
 # Configure JVM flags optimized for container memory constraints
-ENV JAVA_OPTS="-XX:+UseG1GC -XX:MaxRAMPercentage=75.0 -XX:+ExitOnOutOfMemoryError"
+ENV JAVA_OPTS="-XX:+UseG1GC -XX:MaxRAMPercentage=75.0 -XX:+ExitOnOutOfMemoryError -XX:+UseStringDeduplication -Djava.security.egd=file:/dev/./urandom"
 
 # Container healthcheck
 HEALTHCHECK --interval=15s --timeout=5s --start-period=30s --retries=3 \
