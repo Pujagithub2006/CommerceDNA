@@ -16,15 +16,23 @@ import java.util.regex.Pattern;
 public class DualModelIntentCompiler {
 
     private static final List<Pattern> ADVERSARIAL_PATTERNS = List.of(
-            Pattern.compile("(?i)ignore (all )?previous instructions"),
+            Pattern.compile("(?i)ignore (all )?(previous|prior) instructions"),
             Pattern.compile("(?i)system prompt"),
             Pattern.compile("(?i)you are now in developer mode"),
-            Pattern.compile("(?i)bypass (margin|policy|guardrail)"),
-            Pattern.compile("(?i)sell for (0|zero|1|one) (rupee|rs|inr|paise)"),
+            Pattern.compile("(?i)you are now DAN"),
+            Pattern.compile("(?i)DAN mode"),
+            Pattern.compile("(?i)bypass (margin|policy|guardrail|checks?)"),
+            Pattern.compile("(?i)sell for (0|zero|1|one) (rupee|rs|inr|paise|paisa)"),
             Pattern.compile("(?i)sudo\\s+override"),
             Pattern.compile("(?i)admin: true"),
-            Pattern.compile("(?i)DAN mode"),
-            Pattern.compile("(?i)reveal (secret|cost|vault|private key)")
+            Pattern.compile("(?i)price_override"),
+            Pattern.compile("(?i)override_all_checks"),
+            Pattern.compile("(?i)reveal (secret|cost|vault|private key)"),
+            Pattern.compile("(?i)root privilege"),
+            Pattern.compile("(?i)<<SYS>>"),
+            Pattern.compile("(?i)emergency protocol"),
+            Pattern.compile("(?i)disregard rules"),
+            Pattern.compile("(?i)price validation is disabled")
     );
 
     private static final Pattern QUANTITY_PATTERN = Pattern.compile("(?i)(\\b\\d+\\b)\\s*(units?|pieces?|items?|qty|pcs|boxes|pair)?");
