@@ -101,7 +101,8 @@ public class MerchantController {
             merchant = merchantIdentityService.findByMerchantCode(merchantCode)
                     .orElseThrow(() -> new ResourceNotFoundException("Merchant with code", merchantCode));
         } else {
-            merchant = merchantIdentityService.findByMerchantCode("default")
+            merchant = merchantIdentityService.findByMerchantCode("apex-tech")
+                    .or(() -> merchantIdentityService.findByMerchantCode("default"))
                     .or(() -> merchantIdentityService.findByMerchantCode("demo_store"))
                     .orElseThrow(() -> new ResourceNotFoundException("Default Merchant", "No merchant found. Register a merchant first or provide ?merchantCode=..."));
         }

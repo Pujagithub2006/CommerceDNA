@@ -1,0 +1,71 @@
+name: CommerceDNA CI Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    name: Maven Build & Multi-Module Test Suite
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_DB: commercedna
+          POSTGRES_USER: cdna_user
+          POSTGRES_PASSWORD: cdna_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 (Eclipse Temurin)
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Build and Test with Maven
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/commercedna
+          SPRING_DATASOURCE_USERNAME: cdna_user
+          SPRING_DATASOURCE_PASSWORD: cdna_password
+          SPRING_DATA_REDIS_HOST: localhost
+          SPRING_DATA_REDIS_PORT: 6379
+          COMMERCEDNA_MASTER_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+        run: |
+          mvn clean test -B --no-transfer-progress
+
+      - name: Package Executable Artifact
+        run: |
+          mvn package -DskipTests -B --no-transfer-progress
+
+      - name: Verify Docker Container Build
+        run: |
+          docker build -t commercedna:ci -f Dockerfile .
+
+      - name: Run Container Health Check
+        run: |
+          docker run --rm commercedna:ci java -version

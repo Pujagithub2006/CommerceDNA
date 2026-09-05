@@ -25,4 +25,10 @@ public interface OrderJpaRepository extends JpaRepository<OrderEntity, UUID> {
     List<OrderEntity> findByBuyerAgentDid(String buyerAgentDid);
 
     List<OrderEntity> findByStatus(OrderStatus status);
+
+    @org.springframework.data.jpa.repository.Query("SELECT COALESCE(SUM(o.totalAmountPaise), 0L) FROM OrderEntity o WHERE o.status = :status")
+    long sumTotalAmountPaiseByStatus(@org.springframework.data.repository.query.Param("status") OrderStatus status);
+
+    @org.springframework.data.jpa.repository.Query("SELECT COALESCE(SUM(o.totalAmountPaise), 0L) FROM OrderEntity o")
+    long sumTotalAmountPaise();
 }

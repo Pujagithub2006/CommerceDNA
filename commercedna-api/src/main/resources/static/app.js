@@ -385,6 +385,8 @@ async function loadOrders() {
     try {
         const tbody = document.getElementById("ordersTableBody");
         if (activeOrder) {
+            const isPaid = activeOrder.status === "PAID";
+            const isRefunded = activeOrder.status === "REFUNDED";
             tbody.innerHTML = `
                 <tr>
                     <td><code>${activeOrder.orderCode}</code></td>
@@ -392,14 +394,53 @@ async function loadOrders() {
                     <td>${activeOrder.sku}</td>
                     <td>${activeOrder.quantity}</td>
                     <td>₹${((activeOrder.totalAmountPaise || 0) / 100).toLocaleString('en-IN')}</td>
-                    <td><span class="badge badge-success">PAID</span></td>
-                    <td><code>${activeOrder.razorpayOrderId}</code></td>
+                    <td><span class="badge ${isRefunded ? 'badge-warning' : (isPaid ? 'badge-success' : 'badge-info')}">${activeOrder.status}</span></td>
+                    <td><code>${activeOrder.razorpayOrderId || 'N/A'}</code></td>
                     <td><a href="${activeOrder.paymentLinkUrl}" target="_blank" class="text-cyan">${activeOrder.paymentLinkUrl}</a></td>
+                    <td>
+                        ${isPaid ? `<button class="btn btn-outline btn-sm" onclick="refundOrderAction('${activeOrder.orderCode}')">Refund ↺</button>` : `<span class="text-muted">—</span>`}
+                    </td>
                 </tr>
             `;
         }
     } catch (e) {
         console.warn("Order load error", e);
+    }
+}
+
+// Refund Order Action
+async function refundOrderAction(orderCode) {
+    if (!confirm(`Are you sure you want to issue a Razorpay Test Mode refund for order ${orderCode}?`)) {
+        return;
+    }
+
+    try {
+        const res = await fetch("/api/v1/settlement/refunds", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                orderCode: orderCode,
+                reason: "Customer initiated return in Admin UI"
+            })
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+            alert(`Refund Processed! Refund ID: ${data.refundId}. Stock inventory restored.`);
+            if (activeOrder && activeOrder.orderCode === orderCode) {
+                activeOrder.status = "REFUNDED";
+            }
+            loadOrders();
+            loadCatalog();
+            loadAuditLedger();
+            loadDashboardData();
+        } else {
+            const err = await res.json();
+            alert("Refund failed: " + (err.detail || "Error processing refund."));
+        }
+    } catch (e) {
+        console.error("Refund action error", e);
+        alert("Refund network error.");
     }
 }
 
