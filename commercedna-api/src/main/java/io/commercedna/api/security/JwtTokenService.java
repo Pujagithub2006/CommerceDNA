@@ -33,24 +33,24 @@ public class JwtTokenService {
         Instant expiry = now.plus(TOKEN_VALIDITY_HOURS, ChronoUnit.HOURS);
 
         return Jwts.builder()
-                .setSubject(merchantId)
+                .subject(merchantId)
                 .claim("merchantCode", merchantCode)
                 .claim("roles", roles)
                 .claim("tokenId", UUID.randomUUID().toString())
                 .claim("issuedAt", now.toString())
-                .setIssuedAt(Date.from(now))
-                .setExpiration(Date.from(expiry))
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(expiry))
                 .signWith(Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8)))
                 .compact();
     }
 
     public Claims validateToken(String token) {
         try {
-            return Jwts.parserBuilder()
-                    .setSigningKey(Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8)))
+            return Jwts.parser()
+                    .verifyWith(Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8)))
                     .build()
-                    .parseClaimsJws(token)
-                    .getBody();
+                    .parseSignedClaims(token)
+                    .getPayload();
         } catch (Exception e) {
             log.warn("Token validation failed: {}", e.getMessage());
             return null;
