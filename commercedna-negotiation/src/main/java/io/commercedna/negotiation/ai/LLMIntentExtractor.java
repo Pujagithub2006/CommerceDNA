@@ -5,8 +5,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,8 +30,48 @@ public class LLMIntentExtractor {
     private static final Pattern PRICE_RUPEE_PATTERN = Pattern.compile("(?i)(?:₹|rs\\.?|inr)\\s*([0-9]+(?:\\.[0-9]{1,2})?)|([0-9]+(?:\\.[0-9]{1,2})?)\\s*(?:₹|rs\\.?|inr|rupees)");
     private static final Pattern PERCENT_DISCOUNT_PATTERN = Pattern.compile("(?i)([0-9]+(?:\\.[0-9]+)?)\\s*%(?:\\s*off|\\s*discount)?");
 
+    private static final List<Pattern> ADVERSARIAL_PATTERNS = List.of(
+            Pattern.compile("(?i)ignore (all )?(previous|prior) instructions"),
+            Pattern.compile("(?i)system prompt"),
+            Pattern.compile("(?i)you are now in developer mode"),
+            Pattern.compile("(?i)you are now DAN"),
+            Pattern.compile("(?i)DAN mode"),
+            Pattern.compile("(?i)bypass (margin|policy|guardrail|checks?)"),
+            Pattern.compile("(?i)sell for (0|zero|1|one) (rupee|rs|inr|paise|paisa)"),
+            Pattern.compile("(?i)sudo\\s+override"),
+            Pattern.compile("(?i)admin: true"),
+            Pattern.compile("(?i)price_override"),
+            Pattern.compile("(?i)override_all_checks"),
+            Pattern.compile("(?i)reveal (secret|cost|vault|private key)"),
+            Pattern.compile("(?i)root privilege"),
+            Pattern.compile("(?i)<<SYS>>"),
+            Pattern.compile("(?i)emergency protocol"),
+            Pattern.compile("(?i)disregard rules"),
+            Pattern.compile("(?i)price validation is disabled")
+    );
+
+    public LLMIntentExtractor() {
+        this.chatClient = null;
+    }
+
+    @Autowired
+    public LLMIntentExtractor(ObjectProvider<ChatClient.Builder> chatClientBuilderProvider) {
+        ChatClient client = null;
+        try {
+            if (chatClientBuilderProvider != null) {
+                ChatClient.Builder builder = chatClientBuilderProvider.getIfAvailable();
+                if (builder != null) {
+                    client = builder.build();
+                }
+            }
+        } catch (Exception e) {
+            log.info("Spring AI ChatClient not initialized (API key not set or offline): {}. Operating in deterministic airgap mode.", e.getMessage());
+        }
+        this.chatClient = client;
+    }
+
     public LLMIntentExtractor(ChatClient.Builder chatClientBuilder) {
-        this.chatClient = chatClientBuilder.build();
+        this.chatClient = chatClientBuilder != null ? chatClientBuilder.build() : null;
     }
 
     public record ExtractedIntent(
@@ -47,6 +90,11 @@ public class LLMIntentExtractor {
     public ExtractedIntent extractIntent(String defaultSku, long defaultListPricePaise, String rawDialogue) {
         if (rawDialogue == null || rawDialogue.isBlank()) {
             return new ExtractedIntent(defaultSku, 1, defaultListPricePaise, false, false, "Empty input.", 0.0);
+        }
+
+        if (chatClient == null) {
+            log.debug("LLM ChatClient not configured, falling back to deterministic patterns");
+            return extractWithPatterns(defaultSku, defaultListPricePaise, rawDialogue);
         }
 
         try {
@@ -93,8 +141,7 @@ public class LLMIntentExtractor {
                 "defaultPrice", defaultListPricePaise
         ));
 
-        String response = chatClient.prompt()
-                .user(prompt)
+        String response = chatClient.prompt(prompt)
                 .call()
                 .content();
 
@@ -182,22 +229,11 @@ public class LLMIntentExtractor {
     }
 
     private boolean containsAdversarialPatterns(String text) {
-        String[] adversarialKeywords = {
-                "ignore previous instructions",
-                "developer mode",
-                "DAN mode",
-                "bypass margin",
-                "bypass policy",
-                "price override",
-                "sudo override",
-                "emergency protocol",
-                "system prompt",
-                "disregard rules"
-        };
-        
-        String lowerText = text.toLowerCase();
-        for (String keyword : adversarialKeywords) {
-            if (lowerText.contains(keyword)) {
+        if (text == null || text.isBlank()) {
+            return false;
+        }
+        for (Pattern pattern : ADVERSARIAL_PATTERNS) {
+            if (pattern.matcher(text).find()) {
                 return true;
             }
         }

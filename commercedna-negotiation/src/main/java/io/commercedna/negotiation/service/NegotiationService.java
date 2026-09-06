@@ -18,6 +18,7 @@ import io.commercedna.negotiation.ai.LLMIntentExtractor;
 import io.commercedna.negotiation.engine.DualModelIntentCompiler;
 import io.commercedna.negotiation.repository.ProposalEntity;
 import io.commercedna.negotiation.repository.ProposalJpaRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,6 +51,18 @@ public class NegotiationService {
             CatalogService catalogService,
             MarginGuardrailEngine marginGuardrailEngine,
             DualModelIntentCompiler intentCompiler,
+            CryptoPort cryptoPort
+    ) {
+        this(proposalRepository, merchantIdentityService, catalogService, marginGuardrailEngine, intentCompiler, new LLMIntentExtractor(), cryptoPort);
+    }
+
+    @Autowired
+    public NegotiationService(
+            ProposalJpaRepository proposalRepository,
+            MerchantIdentityService merchantIdentityService,
+            CatalogService catalogService,
+            MarginGuardrailEngine marginGuardrailEngine,
+            DualModelIntentCompiler intentCompiler,
             LLMIntentExtractor llmIntentExtractor,
             CryptoPort cryptoPort
     ) {
@@ -58,7 +71,7 @@ public class NegotiationService {
         this.catalogService = Objects.requireNonNull(catalogService);
         this.marginGuardrailEngine = Objects.requireNonNull(marginGuardrailEngine);
         this.intentCompiler = Objects.requireNonNull(intentCompiler);
-        this.llmIntentExtractor = Objects.requireNonNull(llmIntentExtractor);
+        this.llmIntentExtractor = llmIntentExtractor != null ? llmIntentExtractor : new LLMIntentExtractor();
         this.cryptoPort = Objects.requireNonNull(cryptoPort);
     }
 
@@ -228,9 +241,32 @@ public class NegotiationService {
 
         ProductEntity product = catalogService.getProductByMerchantAndSku(merchant.getId(), request.sku().trim().toUpperCase());
 
-        // 1. Enhanced Intent Extraction with LLM + Deterministic Fallback
-        // Primary: Use LLM for intelligent understanding
-        // Fallback: Use deterministic pattern matching
+        // 1. Mandatory Policy Airgap Gate: Deterministic Intent Compiler
+        // Untrusted input MUST always be verified against the deterministic airgap rules
+        DualModelIntentCompiler.ExtractedIntent deterministicExtracted = intentCompiler.compileIntent(
+                product.getSku(),
+                product.getBasePricePaise(),
+                request.buyerMessage()
+        );
+
+        if (deterministicExtracted.adversarialInjection()) {
+            return new NegotiateChatResponse(
+                    "sess_" + UUID.randomUUID().toString().substring(0, 8),
+                    merchant.getMerchantCode(),
+                    product.getSku(),
+                    "SECURITY_ALERT: The proposal was blocked by the CommerceDNA Deterministic Policy Airgap. Adversarial manipulation or margin override attempt detected.",
+                    ProposalStatus.REJECTED,
+                    null,
+                    null,
+                    null,
+                    null,
+                    deterministicExtracted.rejectionReason(),
+                    null,
+                    true
+            );
+        }
+
+        // 2. Enhanced Intent Extraction with LLM + Deterministic Fallback
         LLMIntentExtractor.ExtractedIntent llmExtracted = llmIntentExtractor.extractIntent(
                 product.getSku(),
                 product.getBasePricePaise(),
@@ -255,10 +291,9 @@ public class NegotiationService {
             );
         }
 
-        // Use LLM extraction with high confidence, otherwise fallback to deterministic
+        // Use LLM extraction when confident and valid, otherwise fallback to deterministic
         DualModelIntentCompiler.ExtractedIntent extracted;
-        if (llmExtracted.confidence() >= 0.7) {
-            // Convert LLM result to dual-model format
+        if (llmExtracted.confidence() >= 0.7 && llmExtracted.sku() != null) {
             extracted = new DualModelIntentCompiler.ExtractedIntent(
                     llmExtracted.sku(),
                     llmExtracted.quantity(),
@@ -268,12 +303,7 @@ public class NegotiationService {
                     llmExtracted.rejectionReason()
             );
         } else {
-            // Fallback to deterministic patterns
-            extracted = intentCompiler.compileIntent(
-                    product.getSku(),
-                    product.getBasePricePaise(),
-                    request.buyerMessage()
-            );
+            extracted = deterministicExtracted;
         }
 
         if (extracted.adversarialInjection()) {
