@@ -26,6 +26,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <springdoc.version>2.8.5</springdoc.version>
         <razorpay.version>1.4.8</razorpay.version>
+        <spring-ai.version>1.0.0-M4</spring-ai.version>
     </properties>
 
     <modules>
@@ -87,6 +88,15 @@
                 <artifactId>razorpay-java</artifactId>
                 <version>${razorpay.version}</version>
             </dependency>
+
+            <!-- Spring AI BOM -->
+            <dependency>
+                <groupId>org.springframework.ai</groupId>
+                <artifactId>spring-ai-bom</artifactId>
+                <version>${spring-ai.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -147,4 +157,15 @@
             </plugins>
         </pluginManagement>
     </build>
+
+    <repositories>
+        <repository>
+            <id>spring-milestones</id>
+            <name>Spring Milestones</name>
+            <url>https://repo.spring.io/milestone</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 </project>

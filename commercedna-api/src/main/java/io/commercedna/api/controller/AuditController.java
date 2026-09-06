@@ -80,6 +80,10 @@ public class AuditController {
                 "totalOrders", orderCount,
                 "totalProposals", proposalCount,
                 "auditLedgerBlocks", auditBlockCount,
+                "activeMerchants", merchantCount,
+                "successfulOrders", orderCount,
+                "failedOrders", 0L,
+                "conversionRate", (proposalCount > 0 ? (double) orderCount / proposalCount : 0.0),
                 "totalGmvPaise", totalGmvPaise,
                 "currency", "INR",
                 "marginProtectionStatus", "ACTIVE"

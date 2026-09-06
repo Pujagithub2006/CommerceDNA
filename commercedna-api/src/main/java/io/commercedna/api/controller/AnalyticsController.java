@@ -18,25 +18,6 @@ import java.util.Map;
 @Tag(name = "Analytics & Metrics", description = "Real-time business intelligence and performance metrics")
 public class AnalyticsController {
 
-    @GetMapping("/overview")
-    @Operation(summary = "Get Dashboard Overview", description = "Returns key metrics including GMV, product count, proposals, and audit blocks")
-    public ResponseEntity<Map<String, Object>> getOverview() {
-        // In production, this would query the database for real metrics
-        // For now, returning demo data
-        Map<String, Object> metrics = Map.of(
-                "totalGmvPaise", 4400000L,
-                "totalProducts", 3,
-                "totalProposals", 12,
-                "auditLedgerBlocks", 8,
-                "activeMerchants", 1,
-                "successfulOrders", 5,
-                "failedOrders", 0,
-                "conversionRate", 0.42
-        );
-        
-        return ResponseEntity.ok(metrics);
-    }
-
     @GetMapping("/performance")
     @Operation(summary = "Get Performance Metrics", description = "Returns system performance indicators including response times and throughput")
     public ResponseEntity<Map<String, Object>> getPerformanceMetrics() {
