@@ -4,6 +4,7 @@ import io.commercedna.catalog.repository.ProductEntity;
 import io.commercedna.core.exception.IdempotencyConflictException;
 import io.commercedna.core.exception.InventoryExhaustedException;
 import io.commercedna.core.exception.ResourceNotFoundException;
+import io.commercedna.settlement.dto.CreateOrderRequest;
 import io.commercedna.settlement.entity.OrderEntity;
 import io.commercedna.settlement.repository.OrderJpaRepository;
 import org.springframework.stereotype.Service;
@@ -34,7 +35,7 @@ public class OrderValidationService {
     /**
      * Validates that the existing order matches the new request parameters.
      */
-    public void validateIdempotencyMatch(OrderEntity existingOrder, CreateOrderService.OrderRequest request) {
+    public void validateIdempotencyMatch(OrderEntity existingOrder, CreateOrderRequest request) {
         if (!existingOrder.getSku().equalsIgnoreCase(request.sku().trim())
                 || !Objects.equals(existingOrder.getQuantity(), request.quantity())
                 || !Objects.equals(existingOrder.getUnitPricePaise(), request.unitPricePaise())) {
